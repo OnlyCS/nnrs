@@ -10,7 +10,7 @@ following line to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-nnrs = "https://github.com/OnlyCS/nnrs.git"
+nnrs = "0.1.0"
 ```
 
 ## Usage

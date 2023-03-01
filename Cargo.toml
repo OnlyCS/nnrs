@@ -1,0 +1,17 @@
+[package]
+name = "nnrs"
+version = "0.1.0"
+edition = "2021"
+authors = ["OnlyCS"]
+description = "DIY Neural Network Rust Library"
+readme = "README.md"
+repository = "https://github.com/OnlyCS/nnrs"
+license = "AGPL-3.0"
+license-file = "LICENSE"
+keywords = ["neural-network", "rust"]
+categories = ["science", "artificial-intelligence"]
+documentation = "https://docs.rs/nnrs"
+homepage = "https://github.com/OnlyCS/nnrs"
+
+[dependencies]
+anyhow = { version = "1.0.69", features = ["std", "backtrace"] }

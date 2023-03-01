@@ -14,18 +14,17 @@
 //! network.add_layer(LayerID::HiddenLayer(0)).unwrap();
 //!
 //! let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.3).unwrap();
-//! let middle_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.2).unwrap();
+//! let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.2).unwrap();
 //! let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
 //!
-//! // let edge_input_to_output = Edge::create(&mut network, input_node_id, output_node_id, 2.0).unwrap();
-//! let edge_input_to_middle = Edge::create(&mut network, input_node_id, middle_node_id, 1.3).unwrap();
-//! let edge_middle_to_output = Edge::create(&mut network, middle_node_id, output_node_id, 1.5).unwrap();
+//! let edge_input_to_hidden = Edge::create(&mut network, input_node_id, hidden_node_id, 1.3).unwrap();
+//! let edge_hidden_to_output = Edge::create(&mut network, hidden_node_id, output_node_id, 1.5).unwrap();
 //!
 //! network.set_inputs(vec![0.8]).unwrap();
 //! network.fire().unwrap();
 //! network.read(&mut output).unwrap();
 //!
-//! // assert_eq!(output, vec![0.8 * 1.3 * 1.5]);
+//! assert_eq!(output, vec![0.8 * 1.3 * 1.5]);
 //! ```
 //!
 //! ## Neural Networks in a Nutshell
@@ -40,9 +39,7 @@
 //! multiple edges coming into it and multiple edges going out of it. When all of the nodes
 //! have been fired, the output layer's values are read out.
 
-extern crate self as nnrs;
-
-/// A neural network edge.
+/// Edges represent connections between nodes.
 pub mod edge;
 
 /// Contains the `LayerID` enum. Layer IDs are used to group `Nodes`.
@@ -51,7 +48,7 @@ pub mod layer;
 /// Contains the `Network` struct. Use this to interact with your Network.
 pub mod network;
 
-/// A neural network node.
+/// Nodes are the basic building blocks of a neural network.
 pub mod node;
 
 #[test]
@@ -64,11 +61,11 @@ fn test() -> anyhow::Result<()> {
     network.add_layer(LayerID::HiddenLayer(0))?;
 
     let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.3)?;
-    let middle_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.2)?;
+    let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.2)?;
     let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0)?;
 
-    Edge::create(&mut network, input_node_id, middle_node_id, 1.3)?;
-    Edge::create(&mut network, middle_node_id, output_node_id, 1.5)?;
+    Edge::create(&mut network, input_node_id, hidden_node_id, 1.3)?;
+    Edge::create(&mut network, hidden_node_id, output_node_id, 1.5)?;
     Edge::create(&mut network, input_node_id, output_node_id, 2.0)?;
 
     network.set_inputs(vec![0.8])?;

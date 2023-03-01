@@ -15,7 +15,7 @@ pub enum NodeType {
     OutputNode,
 }
 
-/// A neural network node.
+/// Nodes are the basic building blocks of a neural network.
 #[derive(Clone)]
 pub struct Node {
     pub(crate) node_type: NodeType,
@@ -27,6 +27,16 @@ pub struct Node {
 
 impl Node {
     /// Creates a new node.
+    ///
+    /// ### Examples
+    /// ```
+    /// # use nnrs::{network::Network, node::Node, edge::Edge, layer::LayerID};
+    /// # let mut network = Network::default();
+    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
+    /// let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.3).unwrap();
+    /// let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.2).unwrap();
+    /// let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// ```
     pub fn create(network: &mut Network, layer_id: LayerID, threshold: f64) -> Result<usize> {
         let id = network.nodes.len();
 

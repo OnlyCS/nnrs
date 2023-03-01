@@ -1,7 +1,7 @@
 use crate::network::Network;
 use anyhow::{ensure, Context, Result};
 
-/// A neural network edge.
+/// Edges represent connections between nodes.
 #[derive(Clone, Debug)]
 pub struct Edge {
     pub(crate) id: usize,
@@ -12,6 +12,19 @@ pub struct Edge {
 
 impl Edge {
     /// Creates a new edge.
+    ///
+    /// ### Examples
+    /// ```
+    /// # use nnrs::{network::Network, node::Node, edge::Edge, layer::LayerID};
+    /// # let mut network = Network::default();
+    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
+    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.3).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.2).unwrap();
+    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// Edge::create(&mut network, input_node_id, hidden_node_id, 1.3);
+    /// Edge::create(&mut network, hidden_node_id, output_node_id, 1.5);
+    /// Edge::create(&mut network, hidden_node_id, output_node_id, 2.0);
+    /// ```
     pub fn create(
         network: &mut Network,
         node_from_id: usize,

@@ -95,8 +95,6 @@ impl Network {
             }
         }
 
-        println!("t");
-
         for edge in edges {
             let node_from = self.get_node(edge.0).context("Node from does not exist")?;
 
@@ -135,7 +133,14 @@ impl Network {
         }
     }
 
-    /// Add a layer to the network.
+    /// Adds a layer to the network.
+    ///
+    /// ### Example
+    /// ```
+    /// # use nnrs::{network::Network, layer::LayerID};
+    /// # let mut network = Network::default();
+    /// network.add_layer(LayerID::HiddenLayer(0));
+    /// ```
     pub fn add_layer(&mut self, layer: LayerID) -> Result<()> {
         ensure!(!self.layer_ids.contains(&layer), "Layer already exists");
         self.layer_ids.push(layer);
@@ -144,6 +149,14 @@ impl Network {
     }
 
     /// Reads the value of the node into the given array.
+    ///
+    /// ### Example
+    /// ```
+    /// # use nnrs::{network::Network};
+    /// # let mut network = Network::default();
+    /// let mut outs = Vec::new();
+    /// network.read(&mut outs);
+    /// ```
     pub fn read(&self, arr: &mut Vec<f64>) -> Result<()> {
         let output_layer = self
             .get_layer(LayerID::OutputLayer)
@@ -161,7 +174,9 @@ impl Network {
 }
 
 impl Default for Network {
-    /// Create a new network with an input layer and an output layer.
+    /// This creates a new neural network with a default configuration.
+    /// (An empty input and output layer). You can also create an empty
+    /// network
     fn default() -> Self {
         Self {
             nodes: Vec::new(),

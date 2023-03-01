@@ -76,24 +76,4 @@ impl Node {
     pub(crate) fn add_value(&mut self, value: f64) {
         self.value += value;
     }
-
-    pub(crate) fn get_id(&self) -> usize {
-        self.id
-    }
-
-    pub(crate) fn get_layer_id(&self) -> LayerID {
-        self.layer_id
-    }
-
-    pub(crate) fn get_value(&self) -> f64 {
-        self.value
-    }
-
-    pub(crate) fn get_threshold(&self) -> f64 {
-        self.threshold
-    }
-
-    pub(crate) fn get_node_type(&self) -> NodeType {
-        self.node_type
-    }
 }

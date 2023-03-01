@@ -1,20 +1,26 @@
 use std::cmp::Ordering;
 
+/// Assigned to a node to indicate which layer it is in.
 #[derive(Eq, Debug, Clone, Copy)]
 pub enum LayerID {
-    InputNode,
-    HiddenNode(usize),
-    OutputNode,
+    /// The input layer.
+    InputLayer,
+
+    /// A hidden layer, with an id.
+    HiddenLayer(usize),
+
+    /// The output layer.
+    OutputLayer,
 }
 
 impl Ord for LayerID {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (LayerID::InputNode, LayerID::InputNode) => Ordering::Equal,
-            (LayerID::InputNode, _) => Ordering::Less,
-            (LayerID::OutputNode, LayerID::OutputNode) => Ordering::Equal,
-            (LayerID::OutputNode, _) => Ordering::Greater,
-            (LayerID::HiddenNode(x), LayerID::HiddenNode(y)) => x.cmp(y),
+            (LayerID::InputLayer, LayerID::InputLayer) => Ordering::Equal,
+            (LayerID::InputLayer, _) => Ordering::Less,
+            (LayerID::OutputLayer, LayerID::OutputLayer) => Ordering::Equal,
+            (LayerID::OutputLayer, _) => Ordering::Greater,
+            (LayerID::HiddenLayer(x), LayerID::HiddenLayer(y)) => x.cmp(y),
             _ => unreachable!(),
         }
     }
@@ -23,9 +29,9 @@ impl Ord for LayerID {
 impl PartialEq for LayerID {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (LayerID::InputNode, LayerID::InputNode) => true,
-            (LayerID::OutputNode, LayerID::OutputNode) => true,
-            (LayerID::HiddenNode(x), LayerID::HiddenNode(y)) => x == y,
+            (LayerID::InputLayer, LayerID::InputLayer) => true,
+            (LayerID::OutputLayer, LayerID::OutputLayer) => true,
+            (LayerID::HiddenLayer(x), LayerID::HiddenLayer(y)) => x == y,
             _ => false,
         }
     }

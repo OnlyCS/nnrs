@@ -1,6 +1,7 @@
 use crate::network::Network;
 use anyhow::{ensure, Context, Result};
 
+/// A neural network edge.
 #[derive(Clone)]
 pub struct Edge {
     pub(crate) id: usize,
@@ -10,13 +11,15 @@ pub struct Edge {
 }
 
 impl Edge {
+    /// Creates a new edge.
     pub fn create(
         network: &mut Network,
-        id: usize,
         node_from_id: usize,
         node_to_id: usize,
         weight: f64,
-    ) -> Result<()> {
+    ) -> Result<usize> {
+        let id = network.edges.len();
+
         let node_from = network
             .get_node(node_from_id)
             .context("Node from does not exist")?;
@@ -45,6 +48,6 @@ impl Edge {
 
         network.edges.push(edge);
 
-        Ok(())
+        Ok(id)
     }
 }

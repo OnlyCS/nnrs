@@ -2,13 +2,20 @@ use anyhow::{ensure, Result};
 
 use crate::{layer::LayerID, network::Network};
 
+/// Possible node types.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum NodeType {
+    /// An input node.
     InputNode,
+
+    /// A hidden (middle) node.
     HiddenNode,
+
+    /// An output node.
     OutputNode,
 }
 
+/// A neural network node.
 #[derive(Clone)]
 pub struct Node {
     pub(crate) node_type: NodeType,
@@ -19,12 +26,10 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn create(
-        network: &mut Network,
-        id: usize,
-        layer_id: LayerID,
-        threshold: f64,
-    ) -> Result<()> {
+    /// Creates a new node.
+    pub fn create(network: &mut Network, layer_id: LayerID, threshold: f64) -> Result<usize> {
+        let id = network.nodes.len();
+
         ensure!(
             network.get_node(id).is_none(),
             "Node with id {} already exists",
@@ -37,9 +42,9 @@ impl Node {
         );
 
         let node_type = match layer_id {
-            LayerID::InputNode => NodeType::InputNode,
-            LayerID::OutputNode => NodeType::OutputNode,
-            LayerID::HiddenNode(_) => NodeType::HiddenNode,
+            LayerID::InputLayer => NodeType::InputNode,
+            LayerID::OutputLayer => NodeType::OutputNode,
+            LayerID::HiddenLayer(_) => NodeType::HiddenNode,
         };
 
         let node = Node {
@@ -50,12 +55,14 @@ impl Node {
             threshold,
         };
 
+        let id = node.id;
+
         network.nodes.push(node);
 
-        Ok(())
+        Ok(id)
     }
 
-    pub fn set_value(&mut self, value: f64) -> Result<()> {
+    pub(crate) fn set_value(&mut self, value: f64) -> Result<()> {
         ensure!(
             self.node_type == NodeType::InputNode,
             "Cannot set value of non-input node"
@@ -66,27 +73,27 @@ impl Node {
         Ok(())
     }
 
-    pub fn add_value(&mut self, value: f64) {
+    pub(crate) fn add_value(&mut self, value: f64) {
         self.value += value;
     }
 
-    pub fn get_id(&self) -> usize {
+    pub(crate) fn get_id(&self) -> usize {
         self.id
     }
 
-    pub fn get_layer_id(&self) -> LayerID {
+    pub(crate) fn get_layer_id(&self) -> LayerID {
         self.layer_id
     }
 
-    pub fn get_value(&self) -> f64 {
+    pub(crate) fn get_value(&self) -> f64 {
         self.value
     }
 
-    pub fn get_threshold(&self) -> f64 {
+    pub(crate) fn get_threshold(&self) -> f64 {
         self.threshold
     }
 
-    pub fn get_node_type(&self) -> NodeType {
+    pub(crate) fn get_node_type(&self) -> NodeType {
         self.node_type
     }
 }

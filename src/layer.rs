@@ -21,7 +21,8 @@ impl Ord for LayerID {
             (LayerID::OutputLayer, LayerID::OutputLayer) => Ordering::Equal,
             (LayerID::OutputLayer, _) => Ordering::Greater,
             (LayerID::HiddenLayer(x), LayerID::HiddenLayer(y)) => x.cmp(y),
-            _ => unreachable!(),
+            (_, LayerID::InputLayer) => Ordering::Greater,
+            (_, LayerID::OutputLayer) => Ordering::Less,
         }
     }
 }

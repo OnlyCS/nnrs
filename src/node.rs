@@ -36,7 +36,7 @@ impl Node {
             id
         );
         ensure!(
-            network.get_layer(layer_id).is_some(),
+            network.get_layer_mut(layer_id).is_some(),
             "Layer with id {:?} does not exist",
             layer_id
         );

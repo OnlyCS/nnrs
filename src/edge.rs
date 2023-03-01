@@ -2,7 +2,7 @@ use crate::network::Network;
 use anyhow::{ensure, Context, Result};
 
 /// A neural network edge.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Edge {
     pub(crate) id: usize,
     pub(crate) weight: f64,

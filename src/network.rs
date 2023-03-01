@@ -19,7 +19,21 @@ impl Network {
         self.nodes.iter_mut().find(|node| node.id == node_id)
     }
 
-    pub(crate) fn get_layer(&mut self, layer_id: LayerID) -> Option<Vec<&mut Node>> {
+    pub(crate) fn get_layer(&self, layer_id: LayerID) -> Option<Vec<&Node>> {
+        let matches = self
+            .nodes
+            .iter()
+            .filter(|node| node.layer_id == layer_id)
+            .collect::<Vec<&Node>>();
+
+        if !self.layer_ids.contains(&layer_id) {
+            None
+        } else {
+            Some(matches)
+        }
+    }
+
+    pub(crate) fn get_layer_mut(&mut self, layer_id: LayerID) -> Option<Vec<&mut Node>> {
         let matches = self
             .nodes
             .iter_mut()
@@ -40,7 +54,7 @@ impl Network {
     /// Sets the inputs of the network.
     pub fn set_inputs(&mut self, inputs: Vec<f64>) -> Result<()> {
         let mut input_layer = self
-            .get_layer(LayerID::InputLayer)
+            .get_layer_mut(LayerID::InputLayer)
             .context("Input layer does not exist")?;
 
         ensure!(
@@ -58,7 +72,7 @@ impl Network {
     pub(crate) fn fire_layer(&mut self, id: LayerID) -> Result<()> {
         let ids = self
             .clone()
-            .get_layer(id)
+            .get_layer_mut(id)
             .context("Layer does not exist")?
             .iter()
             .map(|node| node.id)
@@ -67,11 +81,11 @@ impl Network {
         let mut edges = Vec::new();
 
         for id in ids {
-            if let Some(edge) = self
+            for edge in self
                 .clone()
                 .edges
                 .iter()
-                .find(|edge| edge.node_from_id == id)
+                .filter(|edge| edge.node_from_id == id)
             {
                 edges.push((
                     edge.clone().node_from_id,
@@ -80,6 +94,8 @@ impl Network {
                 ))
             }
         }
+
+        println!("t");
 
         for edge in edges {
             let node_from = self.get_node(edge.0).context("Node from does not exist")?;
@@ -101,7 +117,7 @@ impl Network {
     /// Fires the network.
     pub fn fire(&mut self) -> Result<()> {
         let mut layers_sorted = self.layer_ids.clone();
-        layers_sorted.sort_by(|a, b| b.cmp(a));
+        layers_sorted.sort();
 
         for layer in layers_sorted {
             self.fire_layer(layer)?;
@@ -123,6 +139,22 @@ impl Network {
     pub fn add_layer(&mut self, layer: LayerID) -> Result<()> {
         ensure!(!self.layer_ids.contains(&layer), "Layer already exists");
         self.layer_ids.push(layer);
+
+        Ok(())
+    }
+
+    /// Reads the value of the node into the given array.
+    pub fn read(&self, arr: &mut Vec<f64>) -> Result<()> {
+        let output_layer = self
+            .get_layer(LayerID::OutputLayer)
+            .context("Output layer does not exist")?;
+        let mut outputs = Vec::new();
+
+        for node in output_layer {
+            outputs.push(node.value);
+        }
+
+        outputs.clone_into(arr);
 
         Ok(())
     }

@@ -1,0 +1,19 @@
+{
+	"name": "GitHub Codespaces Starter for nnrs",
+	"dockerFile": "Dockerfile",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"cschleiden.vscode-github-actions",
+				"ms-vsliveshare.vsliveshare",
+				"matklad.rust-analyzer",
+				"serayuzgur.crates",
+				"vadimcn.vscode-lldb"
+			],
+			"settings": {
+				"editor.formatOnSave": true,
+				"terminal.integrated.defaultProfile.linux": "zsh"
+			}
+		}
+	}
+}

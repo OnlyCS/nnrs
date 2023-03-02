@@ -89,10 +89,25 @@ To get the outputs of a neural network, use the `Network::get_outputs` method:
 ```rust
 let mut output: Vec<f64> = Vec::new();
 
-network.get_outputs(&mut output)?;
+network.read(&mut output)?;
 ```
 
 This gets the output of the output node and stores it in the `output` vector.
+
+### Serializing and Deserializing
+
+To serialize a network, use the `Network::serialize` method:
+
+```rust
+let serialized: String = network.serialize()?;
+```
+
+To deserialize a network, use the `Network::deserialize` method:
+
+```rust
+let mut network: Network = Network::deserialized(&serialized)?;
+```
+
 
 ## Limitations
 

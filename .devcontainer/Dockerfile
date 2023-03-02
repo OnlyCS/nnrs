@@ -4,6 +4,19 @@ WORKDIR /home/
 
 COPY . .
 
-RUN bash ./setup.sh
+RUN apt-get update
+RUN apt-get install -y \
+  curl \
+  git \
+  gnupg2 \
+  jq \
+  sudo \
+  zsh \
+  vim \
+  build-essential \
+  openssl
 
-ENV PATH="/root/.cargo/bin:$PATH"
+RUN useradd -m -s /bin/zsh github
+USER github
+
+RUN bash ./setup.sh

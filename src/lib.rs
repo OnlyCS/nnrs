@@ -52,11 +52,10 @@ pub mod network;
 pub mod node;
 
 #[test]
-fn test() -> anyhow::Result<()> {
+fn test_creation() -> anyhow::Result<crate::network::Network> {
     use crate::{edge::Edge, layer::LayerID, network::Network, node::Node};
 
     let mut network = Network::default();
-    let mut output: Vec<f64> = Vec::new();
 
     network.add_layer(LayerID::HiddenLayer(0))?;
 
@@ -68,11 +67,43 @@ fn test() -> anyhow::Result<()> {
     Edge::create(&mut network, hidden_node_id, output_node_id, 1.5)?;
     Edge::create(&mut network, input_node_id, output_node_id, 2.0)?;
 
+    Ok(network)
+}
+
+#[test]
+fn test_io() -> anyhow::Result<()> {
+    let mut network = test_creation()?;
+    let mut output: Vec<f64> = Vec::new();
+
     network.set_inputs(vec![0.8])?;
     network.fire()?;
     network.read(&mut output)?;
 
     assert_eq!(output, vec![(0.8 * 2.0) + (0.8 * 1.3 * 1.5)]);
+
+    Ok(())
+}
+
+#[test]
+fn test_serialization() -> anyhow::Result<()> {
+    use crate::network::Network;
+
+    let mut network = test_creation()?;
+    let mut output: Vec<f64> = Vec::new();
+    let mut output_deserialized: Vec<f64> = Vec::new();
+
+    network.set_inputs(vec![0.8])?;
+
+    let serialized = serde_json::to_string(&network)?;
+    let mut deserialized: Network = serde_json::from_str(&serialized)?;
+
+    network.fire()?;
+    network.read(&mut output)?;
+
+    deserialized.fire()?;
+    deserialized.read(&mut output_deserialized)?;
+
+    assert_eq!(output, output_deserialized);
 
     Ok(())
 }

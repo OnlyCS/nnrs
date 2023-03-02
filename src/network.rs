@@ -1,9 +1,11 @@
-use anyhow::{ensure, Context, Result};
+use std::process::{ExitCode, Termination};
 
 use crate::{edge::Edge, layer::LayerID, node::Node};
+use anyhow::{ensure, Context, Result};
+use serde::{Deserialize, Serialize};
 
 /// A neural network. Interact with this struct to create and modify your network.
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Network {
     pub(crate) nodes: Vec<Node>,
     pub(crate) edges: Vec<Edge>,
@@ -171,6 +173,64 @@ impl Network {
 
         Ok(())
     }
+
+    /// Reset the network to that it can be fired again
+    ///
+    /// ### Example
+    /// ```
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
+    /// # let mut network = Network::default();
+    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
+    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
+    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
+    /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
+    /// network.set_inputs(vec![0.8]).unwrap();
+    ///
+    /// let mut outs = Vec::new();
+    /// let mut outs2 = Vec::new();
+    ///
+    /// network.read(&mut outs);
+    ///
+    /// network.reset();
+    /// network.set_inputs(vec![0.9]).unwrap();
+    /// network.read(&mut outs2);
+    ///
+    /// assert_eq!(outs, outs2);
+    /// ```
+    pub fn reset(&mut self) {
+        for node in self.nodes.iter_mut() {
+            node.reset();
+        }
+    }
+
+    /// Serialize the network to a string
+    ///
+    /// ### Example
+    /// ```
+    /// # use nnrs::{network::Network, layer::LayerID};
+    /// # let mut network = Network::default();
+    ///
+    /// let string = network.serialize().unwrap();
+    /// ```
+    pub fn serialize(&self) -> Result<String> {
+        serde_json::to_string(&self).context("Could not serialize network")
+    }
+
+    /// Deserialize a network from a string
+    ///
+    /// ### Example
+    /// ```
+    /// # use nnrs::{network::Network, layer::LayerID};
+    /// # let mut network = Network::default();
+    ///
+    /// let string = network.serialize().unwrap();
+    /// let network = Network::deserialized(&string).unwrap();
+    /// ```
+    pub fn deserialized(string: &str) -> Result<Self> {
+        serde_json::from_str(string).context("Could not deserialize network")
+    }
 }
 
 impl Default for Network {
@@ -183,5 +243,11 @@ impl Default for Network {
             edges: Vec::new(),
             layer_ids: vec![LayerID::InputLayer, LayerID::OutputLayer],
         }
+    }
+}
+
+impl Termination for Network {
+    fn report(self) -> ExitCode {
+        0.into()
     }
 }

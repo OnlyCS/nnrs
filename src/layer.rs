@@ -1,7 +1,8 @@
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
 /// Assigned to a node to indicate which layer it is in.
-#[derive(Eq, Debug, Clone, Copy)]
+#[derive(Eq, Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum LayerID {
     /// The input layer.
     InputLayer,

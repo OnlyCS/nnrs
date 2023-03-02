@@ -1,8 +1,9 @@
 use crate::network::Network;
 use anyhow::{ensure, Context, Result};
+use serde::{Deserialize, Serialize};
 
 /// Edges represent connections between nodes.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Edge {
     pub(crate) id: usize,
     pub(crate) weight: f64,

@@ -1,9 +1,10 @@
 use anyhow::{ensure, Result};
+use serde::{Deserialize, Serialize};
 
 use crate::{layer::LayerID, network::Network};
 
 /// Possible node types.
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 pub enum NodeType {
     /// An input node.
     InputNode,
@@ -16,7 +17,7 @@ pub enum NodeType {
 }
 
 /// Nodes are the basic building blocks of a neural network.
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Node {
     pub(crate) node_type: NodeType,
     pub(crate) id: usize,
@@ -85,5 +86,9 @@ impl Node {
 
     pub(crate) fn add_value(&mut self, value: f64) {
         self.value += value;
+    }
+
+    pub(crate) fn reset(&mut self) {
+        self.value = 0.0;
     }
 }

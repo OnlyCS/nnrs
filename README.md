@@ -5,15 +5,16 @@ networks, including creating nodes and edges, setting inputs, and firing the
 network to generate outputs.
 
 ## Installation
-To use NNRS, simply add it as a dependency to your Rust project by adding the
-following line to your `Cargo.toml` file:
+To use NNRS, simply add it as a dependency to your Rust project with Cargo:
 
-```toml
-[dependencies]
-nnrs = "0.1.0"
+```sh
+cargo add nnrs
 ```
 
 ## Usage
+
+Note: This section may not be entirely up to date. For more accurate, tested
+information, see the (https://docs.rs/nnrs)[documentation].
 
 ### Creating a Network
 To create a new neural network, use the `Network` struct:
@@ -70,7 +71,7 @@ node to the output node, with weights of 1.3 and 1.5 respectively.
 To set the inputs of a neural network, use the `Network::set_inputs` method:
 
 ```rust
-network.set_inputs(&[0.8])?;
+network.set_inputs(vec![0.8])?;
 ```
 
 This sets the input of the input node to 0.8.
@@ -108,6 +109,19 @@ To deserialize a network, use the `Network::deserialize` method:
 let mut network: Network = Network::deserialized(&serialized)?;
 ```
 
+#### To a file
+
+To serialize a network to a file, use the `Network::save` method:
+
+```rust
+network.save("network.json")?;
+```
+
+To deserialize a network from a file, use the `Network::load` method:
+
+```rust
+let mut network: Network = Network::load("network.json")?;
+```
 
 ## Limitations
 
@@ -118,7 +132,7 @@ can use this library to generate outputs from pre-trained networks.
 
 - [x] Basic Parts
 - [x] Generating Outputs
-- [ ] Serialization
+- [x] Serialization
 - [ ] Training (NEAT?)
 
 ## License

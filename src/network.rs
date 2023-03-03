@@ -1,4 +1,8 @@
-use std::process::{ExitCode, Termination};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    process::{ExitCode, Termination},
+};
 
 use crate::{edge::Edge, layer::LayerID, node::Node};
 use anyhow::{ensure, Context, Result};
@@ -54,6 +58,19 @@ impl Network {
     }
 
     /// Sets the inputs of the network.
+    ///
+    /// ### Example
+    /// ```
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
+    /// # let mut network = Network::default();
+    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
+    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
+    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
+    /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
+    /// network.set_inputs(vec![0.8]).unwrap();
+    /// ```
     pub fn set_inputs(&mut self, inputs: Vec<f64>) -> Result<()> {
         let mut input_layer = self
             .get_layer_mut(LayerID::InputLayer)
@@ -209,9 +226,14 @@ impl Network {
     ///
     /// ### Example
     /// ```
-    /// # use nnrs::{network::Network, layer::LayerID};
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
     /// # let mut network = Network::default();
-    ///
+    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
+    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
+    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
+    /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
     /// let string = network.serialize().unwrap();
     /// ```
     pub fn serialize(&self) -> Result<String> {
@@ -222,14 +244,85 @@ impl Network {
     ///
     /// ### Example
     /// ```
-    /// # use nnrs::{network::Network, layer::LayerID};
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
     /// # let mut network = Network::default();
+    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
+    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
+    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
+    /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
+    /// # let string = network.serialize().unwrap();
+    /// let mut network2 = Network::deserialized(&string).unwrap();
     ///
-    /// let string = network.serialize().unwrap();
-    /// let network = Network::deserialized(&string).unwrap();
+    /// let mut outs = Vec::new();
+    /// let mut outs2 = Vec::new();
+    ///
+    /// network.set_inputs(vec![0.8]).unwrap();
+    /// network2.set_inputs(vec![0.8]).unwrap();
+    ///
+    /// network.read(&mut outs);
+    /// network2.read(&mut outs2);
+    ///
+    /// assert_eq!(outs, outs2);
     /// ```
     pub fn deserialized(string: &str) -> Result<Self> {
         serde_json::from_str(string).context("Could not deserialize network")
+    }
+
+    /// Serialize the network to a file
+    ///
+    /// ### Example
+    /// ```
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
+    /// # let mut network = Network::default();
+    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
+    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
+    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
+    /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
+    /// network.save("network.json").unwrap();
+    /// ```
+    pub fn save(&self, path: &str) -> Result<()> {
+        let mut file = File::create(path).context("Could not create file")?;
+        file.write_all(self.serialize()?.as_bytes())
+            .context("Could not write to file")?;
+        Ok(())
+    }
+
+    /// Deserialize a network from a file
+    ///
+    /// ### Example
+    /// ```
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
+    /// # let mut network = Network::default();
+    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
+    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
+    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
+    /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
+    /// # network.save("network.json").unwrap();
+    /// let mut network2 = Network::load("network.json").unwrap();
+    ///
+    /// let mut outs = Vec::new();
+    /// let mut outs2 = Vec::new();
+    ///
+    /// network.set_inputs(vec![0.8]).unwrap();
+    /// network.set_inputs(vec![0.8]).unwrap();
+    ///
+    /// network.read(&mut outs);
+    /// network2.read(&mut outs2);
+    ///
+    /// assert_eq!(outs, outs2);
+    /// ```
+    pub fn load(path: &str) -> Result<Self> {
+        let mut file = File::open(path).context("Could not open file")?;
+        let mut string = String::new();
+        file.read_to_string(&mut string)
+            .context("Could not read file")?;
+        Self::deserialized(&string)
     }
 }
 

@@ -2,7 +2,8 @@
 #![allow(clippy::ptr_arg)]
 
 //! # nnrs
-//! A simple, minimal neural network library written in Rust. No training included
+//! A simple, minimal neural network library written in Rust.
+//! Note: this library is still in development, and is not yet ready for use.
 //!
 //! ## Example:
 //! ```
@@ -51,9 +52,9 @@ pub mod network;
 /// Nodes are the basic building blocks of a neural network.
 pub mod node;
 
-// /// NEAT training for the Neural Network
-// #[cfg(feature = "neat")]
-// pub mod neat;
+/// NEAT training for the Neural Network
+#[cfg(feature = "neat")]
+pub mod neat;
 
 #[test]
 fn test_creation() -> anyhow::Result<crate::network::Network> {
@@ -105,53 +106,53 @@ fn test_serialization() -> anyhow::Result<()> {
     Ok(())
 }
 
-// #[test]
-// fn test_neat() -> anyhow::Result<()> {
-//     use crate::{
-//         neat::{
-//             environment::Environment,
-//             settings::{Settings, TrainingMode},
-//         },
-//         network::Network,
-//     };
+#[test]
+fn test_neat() -> anyhow::Result<()> {
+    use crate::{
+        neat::{
+            environment::Environment,
+            settings::{Settings, TrainingMode},
+        },
+        network::Network,
+    };
 
-//     let network = Network::create(2, 1)?;
+    let network = Network::create(2, 1)?;
 
-//     let settings = Settings {
-//         population_size: 100,
-//         training_mode: TrainingMode::FitnessTarget(100f64),
-//         ..Settings::default()
-//     };
+    let settings = Settings {
+        population_size: 100,
+        training_mode: TrainingMode::FitnessTarget(100f64),
+        ..Settings::default()
+    };
 
-//     let mut environment = Environment::new(settings, network, |network| {
-//         let mut distance = 0.0;
-//         let mut output = vec![];
+    let mut environment = Environment::new(settings, network, |network| {
+        let mut distance = 0.0;
+        let mut output = vec![];
 
-//         network.fire(vec![0.0, 0.0], &mut output).unwrap();
-//         distance += (0f64 - output[0]).abs();
-//         output.clear();
+        network.fire(vec![0.0, 0.0], &mut output).unwrap();
+        distance += (0f64 - output[0]).abs();
+        output.clear();
 
-//         network.fire(vec![0.0, 1.0], &mut output).unwrap();
-//         distance += (1f64 - output[0]).abs();
-//         output.clear();
+        network.fire(vec![0.0, 1.0], &mut output).unwrap();
+        distance += (1f64 - output[0]).abs();
+        output.clear();
 
-//         network.fire(vec![1.0, 0.0], &mut output).unwrap();
-//         distance += (1f64 - output[0]).abs();
-//         output.clear();
+        network.fire(vec![1.0, 0.0], &mut output).unwrap();
+        distance += (1f64 - output[0]).abs();
+        output.clear();
 
-//         network.fire(vec![1.0, 1.0], &mut output).unwrap();
-//         distance += (0f64 - output[0]).abs();
-//         output.clear();
+        network.fire(vec![1.0, 1.0], &mut output).unwrap();
+        distance += (0f64 - output[0]).abs();
+        output.clear();
 
-//         (4f64 - distance).powi(2)
-//     });
+        (4f64 - distance).powi(2)
+    });
 
-//     let mut champ = environment.run().unwrap();
-//     let mut output = vec![];
+    let mut champ = environment.run().unwrap();
+    let mut output = vec![];
 
-//     champ.fire(vec![0.0, 0.0], &mut output).unwrap();
+    champ.fire(vec![0.0, 0.0], &mut output).unwrap();
 
-//     println!("Campion says xor of 1 and 0 is: {:?}", output);
+    println!("Campion says xor of 1 and 0 is: {:?}", output);
 
-//     Ok(())
-// }
+    Ok(())
+}

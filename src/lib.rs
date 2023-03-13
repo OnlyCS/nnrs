@@ -51,20 +51,25 @@ pub mod network;
 /// Nodes are the basic building blocks of a neural network.
 pub mod node;
 
+/// Activation functions
+pub mod activationfn;
+
 // /// NEAT training for the Neural Network
 // #[cfg(feature = "neat")]
 // pub mod neat;
 
 #[test]
 fn test_creation() -> anyhow::Result<crate::network::Network> {
-    use crate::{edge::Edge, layer::LayerID, network::Network, node::Node};
+    use crate::{
+        activationfn::ActivationFn, edge::Edge, layer::LayerID, network::Network, node::Node,
+    };
 
-    let mut network = Network::create(1, 1)?;
+    let mut network = Network::create(1, 1, ActivationFn::ReLU)?;
     let hidden_id = network.add_layer()?;
 
-    let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.3)?;
-    let hidden_node_id = Node::create(&mut network, hidden_id, 0.2)?;
-    let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0)?;
+    let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.3, 0.0)?;
+    let hidden_node_id = Node::create(&mut network, hidden_id, 0.2, 0.0)?;
+    let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0, 0.0)?;
 
     Edge::create(&mut network, input_node_id, hidden_node_id, 1.3)?;
     Edge::create(&mut network, hidden_node_id, output_node_id, 1.5)?;

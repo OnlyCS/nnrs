@@ -4,7 +4,7 @@ use std::{
     process::{ExitCode, Termination},
 };
 
-use crate::{edge::Edge, layer::LayerID, node::Node};
+use crate::{activationfn::ActivationFn, edge::Edge, layer::LayerID, node::Node};
 use anyhow::{ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 
@@ -15,6 +15,7 @@ pub struct Network {
     pub(crate) edges: Vec<Edge>,
     pub(crate) layers: Vec<LayerID>,
     pub(crate) fitness: Option<f64>,
+    pub(crate) activation_fn: ActivationFn,
 }
 
 impl Network {
@@ -152,6 +153,31 @@ impl Network {
             if node_from_value > node_from_threshold {
                 node_to.add_value(node_from_value * edge.2);
             }
+        }
+
+        // get the next layer's id
+        let mut next_layer = match id {
+            LayerID::InputLayer => LayerID::HiddenLayer(0),
+            LayerID::HiddenLayer(id) => LayerID::HiddenLayer(id + 1),
+            LayerID::OutputLayer => LayerID::OutputLayer,
+        };
+
+        if !self.layers.contains(&next_layer) {
+            next_layer = LayerID::OutputLayer;
+        }
+
+        let mut layer = self
+            .get_layer_mut(next_layer)
+            .context("Layer does not exist")?;
+
+        let nodes = layer
+            .iter_mut()
+            .filter(|node| node.layer_id == next_layer)
+            .collect::<Vec<&mut &mut Node>>();
+
+        for node in nodes {
+            node.add_value(node.bias);
+            node.value = node.activation_fn.run(node.value);
         }
 
         Ok(())
@@ -298,20 +324,21 @@ impl Network {
     /// # use nnrs::network::Network;
     /// let network = Network::create(2, 1).unwrap();
     /// ```
-    pub fn create(input_ct: usize, output_ct: usize) -> Result<Self> {
+    pub fn create(input_ct: usize, output_ct: usize, activation_fn: ActivationFn) -> Result<Self> {
         let mut network = Self {
             edges: vec![],
             nodes: vec![],
             layers: vec![LayerID::InputLayer, LayerID::OutputLayer],
             fitness: None,
+            activation_fn,
         };
 
         for _ in 0..input_ct {
-            Node::create(&mut network, LayerID::InputLayer, 0.0)?;
+            Node::create(&mut network, LayerID::InputLayer, 0.0, 0.0)?;
         }
 
         for _ in 0..output_ct {
-            Node::create(&mut network, LayerID::OutputLayer, 0.0)?;
+            Node::create(&mut network, LayerID::OutputLayer, 0.0, 0.0)?;
         }
 
         Ok(network)

@@ -13,7 +13,8 @@ use serde::{Deserialize, Serialize};
 pub struct Network {
     pub(crate) nodes: Vec<Node>,
     pub(crate) edges: Vec<Edge>,
-    pub(crate) layer_ids: Vec<LayerID>,
+    pub(crate) layers: Vec<LayerID>,
+    pub(crate) fitness: Option<f64>,
 }
 
 impl Network {
@@ -32,7 +33,7 @@ impl Network {
             .filter(|node| node.layer_id == layer_id)
             .collect::<Vec<&Node>>();
 
-        if !self.layer_ids.contains(&layer_id) {
+        if !self.layers.contains(&layer_id) {
             None
         } else {
             Some(matches)
@@ -46,7 +47,7 @@ impl Network {
             .filter(|node| node.layer_id == layer_id)
             .collect::<Vec<&mut Node>>();
 
-        if !self.layer_ids.contains(&layer_id) {
+        if !self.layers.contains(&layer_id) {
             None
         } else {
             Some(matches)
@@ -57,7 +58,7 @@ impl Network {
         self.edges.iter().find(|edge| edge.id == edge_id)
     }
 
-    /// Sets the inputs of the network.
+    /// Runs the inputs of the network.
     ///
     /// ### Example
     /// ```
@@ -69,20 +70,45 @@ impl Network {
     /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
     /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
     /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
-    /// network.set_inputs(vec![0.8]).unwrap();
+    /// let mut output = vec![];
+    /// network.set_inputs(vec![0.8], &mut output).unwrap();
     /// ```
-    pub fn set_inputs(&mut self, inputs: Vec<f64>) -> Result<()> {
-        let mut input_layer = self
-            .get_layer_mut(LayerID::InputLayer)
-            .context("Input layer does not exist")?;
-
+    pub fn fire(&mut self, inputs: Vec<f64>, outputs: &mut Vec<f64>) -> Result<()> {
         ensure!(
-            inputs.len() == input_layer.len(),
-            "Number of inputs must match number of input nodes"
+            self.nodes
+                .iter()
+                .filter(|node| node.layer_id == LayerID::InputLayer)
+                .count()
+                == inputs.len(),
+            "Number of inputs does not match number of input nodes"
         );
 
-        for (input, node) in inputs.iter().zip(input_layer.iter_mut()) {
-            node.set_value(*input)?;
+        for (node, input) in self
+            .nodes
+            .iter_mut()
+            .filter(|node| node.layer_id == LayerID::InputLayer)
+            .zip(inputs)
+        {
+            node.value = input;
+        }
+
+        for layer_id in self.layers.clone().iter() {
+            self.fire_layer(*layer_id)?;
+        }
+
+        let output_layer = self
+            .get_layer(LayerID::OutputLayer)
+            .context("Output layer does not exist")?
+            .iter()
+            .map(|node| node.value)
+            .collect::<Vec<f64>>();
+
+        outputs.clear();
+        outputs.extend(output_layer);
+
+        // clear all node's `value` fields
+        for node in self.nodes.iter_mut() {
+            node.reset();
         }
 
         Ok(())
@@ -131,95 +157,35 @@ impl Network {
         Ok(())
     }
 
-    /// Fires the network.
-    pub fn fire(&mut self) -> Result<()> {
-        let mut layers_sorted = self.layer_ids.clone();
-        layers_sorted.sort();
-
-        for layer in layers_sorted {
-            self.fire_layer(layer)?;
-        }
-
-        Ok(())
-    }
-
-    /// Creates an empty new network.
-    pub fn empty() -> Self {
-        Self {
-            nodes: Vec::new(),
-            edges: Vec::new(),
-            layer_ids: Vec::new(),
-        }
-    }
-
-    /// Adds a layer to the network.
+    /// Adds the next available layer.
     ///
     /// ### Example
     /// ```
     /// # use nnrs::{network::Network, layer::LayerID};
-    /// # let mut network = Network::default();
-    /// network.add_layer(LayerID::HiddenLayer(0));
+    /// # let mut network = Network::create();
+    /// let layer_id: LayerID = network.add_layer();
     /// ```
-    pub fn add_layer(&mut self, layer: LayerID) -> Result<()> {
-        ensure!(!self.layer_ids.contains(&layer), "Layer already exists");
-        self.layer_ids.push(layer);
+    pub fn add_layer(&mut self) -> Result<LayerID> {
+        let mut hidden_layers = self
+            .layers
+            .iter()
+            .filter(|layer| matches!(layer, LayerID::HiddenLayer(_)))
+            .collect::<Vec<&LayerID>>();
 
-        Ok(())
-    }
+        hidden_layers.sort();
 
-    /// Reads the value of the node into the given array.
-    ///
-    /// ### Example
-    /// ```
-    /// # use nnrs::{network::Network};
-    /// # let mut network = Network::default();
-    /// let mut outs = Vec::new();
-    /// network.read(&mut outs);
-    /// ```
-    pub fn read(&self, arr: &mut Vec<f64>) -> Result<()> {
-        let output_layer = self
-            .get_layer(LayerID::OutputLayer)
-            .context("Output layer does not exist")?;
-        let mut outputs = Vec::new();
+        let next_layer = match hidden_layers.last() {
+            Some(layer) => match layer {
+                LayerID::HiddenLayer(id) => LayerID::HiddenLayer(id + 1),
+                _ => unreachable!(),
+            },
+            None => LayerID::HiddenLayer(0),
+        };
 
-        for node in output_layer {
-            outputs.push(node.value);
-        }
+        ensure!(!self.layers.contains(&next_layer), "Layer already exists");
+        self.layers.push(next_layer);
 
-        outputs.clone_into(arr);
-
-        Ok(())
-    }
-
-    /// Reset the network to that it can be fired again
-    ///
-    /// ### Example
-    /// ```
-    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
-    /// # let mut network = Network::default();
-    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
-    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
-    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
-    /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
-    /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
-    /// network.set_inputs(vec![0.8]).unwrap();
-    ///
-    /// let mut outs = Vec::new();
-    /// let mut outs2 = Vec::new();
-    ///
-    /// network.read(&mut outs);
-    ///
-    /// network.reset();
-    /// network.set_inputs(vec![0.9]).unwrap();
-    /// network.read(&mut outs2);
-    ///
-    /// assert_eq!(outs, outs2);
-    /// ```
-    pub fn reset(&mut self) {
-        for node in self.nodes.iter_mut() {
-            node.reset();
-        }
+        Ok(next_layer)
     }
 
     /// Serialize the network to a string
@@ -324,18 +290,31 @@ impl Network {
             .context("Could not read file")?;
         Self::deserialized(&string)
     }
-}
 
-impl Default for Network {
-    /// This creates a new neural network with a default configuration.
-    /// (An empty input and output layer). You can also create an empty
-    /// network
-    fn default() -> Self {
-        Self {
-            nodes: Vec::new(),
-            edges: Vec::new(),
-            layer_ids: vec![LayerID::InputLayer, LayerID::OutputLayer],
+    /// Create a new network with the given number of inputs and outputs
+    ///
+    /// ### Example
+    /// ```
+    /// # use nnrs::network::Network;
+    /// let network = Network::create(2, 1).unwrap();
+    /// ```
+    pub fn create(input_ct: usize, output_ct: usize) -> Result<Self> {
+        let mut network = Self {
+            edges: vec![],
+            nodes: vec![],
+            layers: vec![LayerID::InputLayer, LayerID::OutputLayer],
+            fitness: None,
+        };
+
+        for _ in 0..input_ct {
+            Node::create(&mut network, LayerID::InputLayer, 0.0)?;
         }
+
+        for _ in 0..output_ct {
+            Node::create(&mut network, LayerID::OutputLayer, 0.0)?;
+        }
+
+        Ok(network)
     }
 }
 

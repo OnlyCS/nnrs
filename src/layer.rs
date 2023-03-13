@@ -14,6 +14,13 @@ pub enum LayerID {
     OutputLayer,
 }
 
+impl LayerID {
+    /// Returns the next layer id.
+    pub fn is_hidden(&self) -> bool {
+        matches!(self, LayerID::HiddenLayer(_))
+    }
+}
+
 impl Ord for LayerID {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {

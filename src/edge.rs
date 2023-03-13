@@ -32,7 +32,7 @@ impl Edge {
         node_to_id: usize,
         weight: f64,
     ) -> Result<usize> {
-        let id = network.edges.len();
+        let id = network.edges.iter().map(|e| e.id).max().unwrap_or(0) + 1;
 
         let node_from = network
             .get_node(node_from_id)

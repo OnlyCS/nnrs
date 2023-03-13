@@ -39,7 +39,7 @@ impl Node {
     /// let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
     /// ```
     pub fn create(network: &mut Network, layer_id: LayerID, threshold: f64) -> Result<usize> {
-        let id = network.nodes.len();
+        let id = network.nodes.iter().map(|n| n.id).max().unwrap_or(0) + 1;
 
         ensure!(
             network.get_node(id).is_none(),
@@ -71,17 +71,6 @@ impl Node {
         network.nodes.push(node);
 
         Ok(id)
-    }
-
-    pub(crate) fn set_value(&mut self, value: f64) -> Result<()> {
-        ensure!(
-            self.node_type == NodeType::InputNode,
-            "Cannot set value of non-input node"
-        );
-
-        self.value = value;
-
-        Ok(())
     }
 
     pub(crate) fn add_value(&mut self, value: f64) {

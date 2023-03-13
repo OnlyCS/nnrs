@@ -51,16 +51,19 @@ pub mod network;
 /// Nodes are the basic building blocks of a neural network.
 pub mod node;
 
+// /// NEAT training for the Neural Network
+// #[cfg(feature = "neat")]
+// pub mod neat;
+
 #[test]
 fn test_creation() -> anyhow::Result<crate::network::Network> {
     use crate::{edge::Edge, layer::LayerID, network::Network, node::Node};
 
-    let mut network = Network::default();
-
-    network.add_layer(LayerID::HiddenLayer(0))?;
+    let mut network = Network::create(1, 1)?;
+    let hidden_id = network.add_layer()?;
 
     let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.3)?;
-    let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.2)?;
+    let hidden_node_id = Node::create(&mut network, hidden_id, 0.2)?;
     let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0)?;
 
     Edge::create(&mut network, input_node_id, hidden_node_id, 1.3)?;
@@ -75,9 +78,7 @@ fn test_io() -> anyhow::Result<()> {
     let mut network = test_creation()?;
     let mut output: Vec<f64> = Vec::new();
 
-    network.set_inputs(vec![0.8])?;
-    network.fire()?;
-    network.read(&mut output)?;
+    network.fire(vec![0.8], &mut output)?;
 
     assert_eq!(output, vec![(0.8 * 2.0) + (0.8 * 1.3 * 1.5)]);
 
@@ -89,21 +90,68 @@ fn test_serialization() -> anyhow::Result<()> {
     use crate::network::Network;
 
     let mut network = test_creation()?;
-    let mut output: Vec<f64> = Vec::new();
-    let mut output_deserialized: Vec<f64> = Vec::new();
-
-    network.set_inputs(vec![0.8])?;
 
     let serialized = serde_json::to_string(&network)?;
     let mut deserialized: Network = serde_json::from_str(&serialized)?;
 
-    network.fire()?;
-    network.read(&mut output)?;
+    let mut expected_out = Vec::new();
+    let mut actual_out = Vec::new();
 
-    deserialized.fire()?;
-    deserialized.read(&mut output_deserialized)?;
+    network.fire(vec![0.8], &mut expected_out)?;
+    deserialized.fire(vec![0.8], &mut actual_out)?;
 
-    assert_eq!(output, output_deserialized);
+    assert_eq!(expected_out, actual_out);
 
     Ok(())
 }
+
+// #[test]
+// fn test_neat() -> anyhow::Result<()> {
+//     use crate::{
+//         neat::{
+//             environment::Environment,
+//             settings::{Settings, TrainingMode},
+//         },
+//         network::Network,
+//     };
+
+//     let network = Network::create(2, 1)?;
+
+//     let settings = Settings {
+//         population_size: 100,
+//         training_mode: TrainingMode::FitnessTarget(100f64),
+//         ..Settings::default()
+//     };
+
+//     let mut environment = Environment::new(settings, network, |network| {
+//         let mut distance = 0.0;
+//         let mut output = vec![];
+
+//         network.fire(vec![0.0, 0.0], &mut output).unwrap();
+//         distance += (0f64 - output[0]).abs();
+//         output.clear();
+
+//         network.fire(vec![0.0, 1.0], &mut output).unwrap();
+//         distance += (1f64 - output[0]).abs();
+//         output.clear();
+
+//         network.fire(vec![1.0, 0.0], &mut output).unwrap();
+//         distance += (1f64 - output[0]).abs();
+//         output.clear();
+
+//         network.fire(vec![1.0, 1.0], &mut output).unwrap();
+//         distance += (0f64 - output[0]).abs();
+//         output.clear();
+
+//         (4f64 - distance).powi(2)
+//     });
+
+//     let mut champ = environment.run().unwrap();
+//     let mut output = vec![];
+
+//     champ.fire(vec![0.0, 0.0], &mut output).unwrap();
+
+//     println!("Campion says xor of 1 and 0 is: {:?}", output);
+
+//     Ok(())
+// }

@@ -1,6 +1,6 @@
 [package]
 name = "nnrs"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 authors = ["OnlyCS"]
 description = "Rust Neural Network Library"
@@ -18,5 +18,5 @@ rand = "0.8.5"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.93"
 
-[features]
-neat = []
+# [features]
+# neat = []

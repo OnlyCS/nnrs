@@ -14,6 +14,9 @@ pub enum ActivationFn {
 
     /// `|x|` x, aka do nothing
     Linear,
+
+    /// `|x| x.max(0.0) + 0.01 * x`
+    LeakyReLU,
 }
 
 impl ActivationFn {
@@ -23,6 +26,7 @@ impl ActivationFn {
             ActivationFn::Sigmoid => 1.0 / (1.0 + (-x).exp()),
             ActivationFn::Tanh => x.tanh(),
             ActivationFn::Linear => x,
+            ActivationFn::LeakyReLU => x.max(0.0) + 0.01 * x,
         }
     }
 }

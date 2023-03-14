@@ -33,12 +33,12 @@ impl Node {
     ///
     /// ### Examples
     /// ```
-    /// # use nnrs::{network::Network, node::Node, edge::Edge, layer::LayerID};
-    /// # let mut network = Network::default();
-    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
-    /// let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.3).unwrap();
-    /// let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.2).unwrap();
-    /// let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # use nnrs::{network::Network, node::Node, edge::Edge, layer::LayerID, activationfn::ActivationFn};
+    /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
+    /// # let layerid = network.add_layer();
+    /// let input_node_id = network.input_node_ids().pop().unwrap();
+    /// let hidden_node_id = Node::create(&mut network, layerid, 0.2, 0.0).unwrap();
+    /// let output_node_id = network.output_node_ids().pop().unwrap();
     /// ```
     pub fn create(
         network: &mut Network,
@@ -60,9 +60,9 @@ impl Node {
     /// ### Examples
     /// ```
     /// # use nnrs::{network::Network, node::Node, edge::Edge, layer::LayerID, activationfn::ActivationFn};
-    /// # let mut network = Network::default();
-    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
-    /// let input_node_id = Node::create_with_custom_activation(&mut network, LayerID::InputLayer, 0.3, ActivationFn::Sigmoid).unwrap();
+    /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
+    /// # let layerid = network.add_layer();
+    /// let input_node_id = Node::create_with_custom_activation(&mut network, layerid, 0.3, 0.0, ActivationFn::Sigmoid).unwrap();
     pub fn create_with_custom_activation(
         network: &mut Network,
         layer_id: LayerID,

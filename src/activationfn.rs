@@ -3,16 +3,16 @@ use serde::{Deserialize, Serialize};
 /// Activation function for a neuron.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ActivationFn {
-    /// |x| x.max(0.0)
+    /// `|x| x.max(0.0)`
     ReLU,
 
-    /// |x| 1.0 / (1.0 + (-x).exp())
+    /// `|x| 1.0 / (1.0 + (-x).exp())`
     Sigmoid,
 
-    /// |x| x.tanh()
+    /// `|x| x.tanh()`
     Tanh,
 
-    /// |x| x, aka do nothing
+    /// `|x|` x, aka do nothing
     Linear,
 }
 

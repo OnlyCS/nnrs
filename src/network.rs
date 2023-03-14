@@ -63,16 +63,16 @@ impl Network {
     ///
     /// ### Example
     /// ```
-    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
-    /// # let mut network = Network::default();
-    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
-    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
-    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge, activationfn::ActivationFn};
+    /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
+    /// # let layerid = network.add_layer();
+    /// # let input_node_id = network.input_node_ids().pop().unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.0, 0.0).unwrap();
+    /// # let output_node_id = network.output_node_ids().pop().unwrap();
     /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
     /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
     /// let mut output = vec![];
-    /// network.set_inputs(vec![0.8], &mut output).unwrap();
+    /// network.fire(vec![0.8], &mut output).unwrap();
     /// ```
     pub fn fire(&mut self, inputs: Vec<f64>, outputs: &mut Vec<f64>) -> Result<()> {
         ensure!(
@@ -187,11 +187,11 @@ impl Network {
     ///
     /// ### Example
     /// ```
-    /// # use nnrs::{network::Network, layer::LayerID};
-    /// # let mut network = Network::create();
+    /// # use nnrs::{network::Network, layer::LayerID, activationfn::ActivationFn};
+    /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
     /// let layer_id: LayerID = network.add_layer();
     /// ```
-    pub fn add_layer(&mut self) -> Result<LayerID> {
+    pub fn add_layer(&mut self) -> LayerID {
         let mut hidden_layers = self
             .layers
             .iter()
@@ -208,22 +208,21 @@ impl Network {
             None => LayerID::HiddenLayer(0),
         };
 
-        ensure!(!self.layers.contains(&next_layer), "Layer already exists");
         self.layers.push(next_layer);
 
-        Ok(next_layer)
+        next_layer
     }
 
     /// Serialize the network to a string
     ///
     /// ### Example
     /// ```
-    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
-    /// # let mut network = Network::default();
-    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
-    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
-    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge, activationfn::ActivationFn};
+    /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
+    /// # let layerid = network.add_layer();
+    /// # let input_node_id = network.input_node_ids().pop().unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.0, 0.0).unwrap();
+    /// # let output_node_id = network.output_node_ids().pop().unwrap();
     /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
     /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
     /// let string = network.serialize().unwrap();
@@ -236,25 +235,22 @@ impl Network {
     ///
     /// ### Example
     /// ```
-    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
-    /// # let mut network = Network::default();
-    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
-    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
-    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge, activationfn::ActivationFn};
+    /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
+    /// # let layer_id = network.add_layer();
+    /// # let input_node_id = network.input_node_ids().pop().unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0, 0.0).unwrap();
+    /// # let output_node_id = network.output_node_ids().pop().unwrap();
     /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
     /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
-    /// # let string = network.serialize().unwrap();
+    /// let string = network.serialize().unwrap();
     /// let mut network2 = Network::deserialized(&string).unwrap();
     ///
     /// let mut outs = Vec::new();
     /// let mut outs2 = Vec::new();
     ///
-    /// network.set_inputs(vec![0.8]).unwrap();
-    /// network2.set_inputs(vec![0.8]).unwrap();
-    ///
-    /// network.read(&mut outs);
-    /// network2.read(&mut outs2);
+    /// network.fire(vec![0.8], &mut outs).unwrap();
+    /// network2.fire(vec![0.8], &mut outs2).unwrap();
     ///
     /// assert_eq!(outs, outs2);
     /// ```
@@ -266,12 +262,12 @@ impl Network {
     ///
     /// ### Example
     /// ```
-    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
-    /// # let mut network = Network::default();
-    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
-    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
-    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge, activationfn::ActivationFn};
+    /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
+    /// # let layerid = network.add_layer();
+    /// # let input_node_id = network.input_node_ids().pop().unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0, 0.0).unwrap();
+    /// # let output_node_id = network.output_node_ids().pop().unwrap();
     /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
     /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
     /// network.save("network.json").unwrap();
@@ -287,25 +283,22 @@ impl Network {
     ///
     /// ### Example
     /// ```
-    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge};
-    /// # let mut network = Network::default();
-    /// # network.add_layer(LayerID::HiddenLayer(0)).unwrap();
-    /// # let input_node_id = Node::create(&mut network, LayerID::InputLayer, 0.0).unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
-    /// # let output_node_id = Node::create(&mut network, LayerID::OutputLayer, 0.0).unwrap();
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge, activationfn::ActivationFn};
+    /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
+    /// # let layerid = network.add_layer();
+    /// # let input_node_id = network.input_node_ids().pop().unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.0, 0.0).unwrap();
+    /// # let output_node_id = network.output_node_ids().pop().unwrap();
     /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
     /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
-    /// # network.save("network.json").unwrap();
+    /// network.save("network.json").unwrap();
     /// let mut network2 = Network::load("network.json").unwrap();
     ///
     /// let mut outs = Vec::new();
     /// let mut outs2 = Vec::new();
     ///
-    /// network.set_inputs(vec![0.8]).unwrap();
-    /// network.set_inputs(vec![0.8]).unwrap();
-    ///
-    /// network.read(&mut outs);
-    /// network2.read(&mut outs2);
+    /// network.fire(vec![0.8], &mut outs).unwrap();
+    /// network2.fire(vec![0.8], &mut outs2).unwrap();
     ///
     /// assert_eq!(outs, outs2);
     /// ```
@@ -321,8 +314,8 @@ impl Network {
     ///
     /// ### Example
     /// ```
-    /// # use nnrs::network::Network;
-    /// let network = Network::create(2, 1).unwrap();
+    /// # use nnrs::{network::Network, activationfn::ActivationFn};
+    /// let mut network = Network::create(2, 1, ActivationFn::Linear).unwrap();
     /// ```
     pub fn create(input_ct: usize, output_ct: usize, activation_fn: ActivationFn) -> Result<Self> {
         let mut network = Self {
@@ -333,15 +326,49 @@ impl Network {
             activation_fn,
         };
 
+        let mut input_ids = Vec::new();
+        let mut output_ids = Vec::new();
+
         for _ in 0..input_ct {
-            Node::create(&mut network, LayerID::InputLayer, 0.0, 0.0)?;
+            input_ids.push(Node::create(&mut network, LayerID::InputLayer, 0.0, 0.0)?);
         }
 
         for _ in 0..output_ct {
-            Node::create(&mut network, LayerID::OutputLayer, 0.0, 0.0)?;
+            output_ids.push(Node::create(&mut network, LayerID::OutputLayer, 0.0, 0.0)?);
         }
 
         Ok(network)
+    }
+
+    /// Get the ids of all the input nodes
+    ///
+    /// ### Example
+    /// ```
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge, activationfn::ActivationFn};
+    /// let mut network = Network::create(1, 1, ActivationFn::Linear).unwrap();
+    /// let input_node_id = network.input_node_ids().pop().unwrap();
+    pub fn input_node_ids(&self) -> Vec<usize> {
+        self.nodes
+            .iter()
+            .filter(|n| n.layer_id == LayerID::InputLayer)
+            .map(|n| n.id)
+            .collect()
+    }
+
+    /// Get the ids of all the output nodes
+    ///
+    /// ### Example
+    /// ```
+    /// # use nnrs::{network::Network, node::Node, layer::LayerID, edge::Edge, activationfn::ActivationFn};
+    /// let mut network = Network::create(1, 1, ActivationFn::Linear).unwrap();
+    /// let output_node_id = network.output_node_ids().pop().unwrap();
+    /// ```
+    pub fn output_node_ids(&self) -> Vec<usize> {
+        self.nodes
+            .iter()
+            .filter(|n| n.layer_id == LayerID::OutputLayer)
+            .map(|n| n.id)
+            .collect()
     }
 }
 

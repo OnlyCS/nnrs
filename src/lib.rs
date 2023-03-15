@@ -14,7 +14,7 @@
 //! let layer_id = network.add_layer();
 //!
 //! let input_node_id = network.input_node_ids().pop().unwrap();
-//! let hidden_node_id = Node::create(&mut network, layer_id, 0.2, 0.0).unwrap();
+//! let hidden_node_id = Node::create(&mut network, layer_id, 0.2).unwrap();
 //! let output_node_id = network.output_node_ids().pop().unwrap();
 //!
 //! let edge_input_to_hidden = Edge::create(&mut network, input_node_id, hidden_node_id, 1.3).unwrap();
@@ -22,7 +22,7 @@
 //!
 //! network.fire(vec![0.8], &mut output).unwrap();
 //!
-//! assert_eq!(output, vec![0.8 * 1.3 * 1.5]);
+//! assert_eq!(output, vec![((0.8 * 1.3) + 0.2) * 1.5]);
 //! ```
 
 /// Edges represent connections between nodes.
@@ -52,7 +52,7 @@ fn test_creation() -> anyhow::Result<crate::network::Network> {
     let hidden_id = network.add_layer();
 
     let input_node_id = network.input_node_ids().pop().unwrap();
-    let hidden_node_id = Node::create(&mut network, hidden_id, 0.2, 0.0)?;
+    let hidden_node_id = Node::create(&mut network, hidden_id, 0.2)?;
     let output_node_id = network.output_node_ids().pop().unwrap();
 
     Edge::create(&mut network, input_node_id, hidden_node_id, 1.3)?;
@@ -69,7 +69,7 @@ fn test_io() -> anyhow::Result<()> {
 
     network.fire(vec![0.8], &mut output)?;
 
-    assert_eq!(output, vec![(0.8 * 2.0) + (0.8 * 1.3 * 1.5)]);
+    assert_eq!(output, vec![(0.8 * 2.0) + (((0.8 * 1.3) + 0.2) * 1.5)]);
 
     Ok(())
 }

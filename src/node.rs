@@ -23,7 +23,6 @@ pub struct Node {
     pub(crate) id: usize,
     pub(crate) layer_id: LayerID,
     pub(crate) value: f64,
-    pub(crate) threshold: f64,
     pub(crate) bias: f64,
     pub(crate) activation_fn: ActivationFn,
 }
@@ -37,22 +36,11 @@ impl Node {
     /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
     /// # let layerid = network.add_layer();
     /// let input_node_id = network.input_node_ids().pop().unwrap();
-    /// let hidden_node_id = Node::create(&mut network, layerid, 0.2, 0.0).unwrap();
+    /// let hidden_node_id = Node::create(&mut network, layerid, 0.0).unwrap();
     /// let output_node_id = network.output_node_ids().pop().unwrap();
     /// ```
-    pub fn create(
-        network: &mut Network,
-        layer_id: LayerID,
-        threshold: f64,
-        bias: f64,
-    ) -> Result<usize> {
-        Self::create_with_custom_activation(
-            network,
-            layer_id,
-            threshold,
-            bias,
-            network.activation_fn,
-        )
+    pub fn create(network: &mut Network, layer_id: LayerID, bias: f64) -> Result<usize> {
+        Self::create_with_custom_activation(network, layer_id, bias, network.activation_fn)
     }
 
     /// Creates a new node with a custom activation function.
@@ -62,11 +50,10 @@ impl Node {
     /// # use nnrs::{network::Network, node::Node, edge::Edge, layer::LayerID, activationfn::ActivationFn};
     /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
     /// # let layerid = network.add_layer();
-    /// let input_node_id = Node::create_with_custom_activation(&mut network, layerid, 0.3, 0.0, ActivationFn::Sigmoid).unwrap();
+    /// let input_node_id = Node::create_with_custom_activation(&mut network, layerid, 0.0, ActivationFn::Sigmoid).unwrap();
     pub fn create_with_custom_activation(
         network: &mut Network,
         layer_id: LayerID,
-        threshold: f64,
         bias: f64,
         activation_fn: ActivationFn,
     ) -> Result<usize> {
@@ -94,7 +81,6 @@ impl Node {
             id,
             layer_id,
             value: 0.0,
-            threshold,
             bias,
             activation_fn,
         };

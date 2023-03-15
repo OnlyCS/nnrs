@@ -15,7 +15,6 @@ pub(crate) enum Mutation {
     RemoveNode,
     RemoveEdge,
     ChangeWeight,
-    ChangeThreshold,
     ChangeBias,
     ChangeActivationFn,
 }
@@ -25,7 +24,7 @@ impl SelectRandom for Mutation {
     where
         R: Rng,
     {
-        let random_mutation = rng.gen_range(0..9);
+        let random_mutation = rng.gen_range(0..8);
         match random_mutation {
             0 => Mutation::AddNode,
             1 => Mutation::AddLayer,
@@ -33,9 +32,8 @@ impl SelectRandom for Mutation {
             3 => Mutation::RemoveNode,
             4 => Mutation::RemoveEdge,
             5 => Mutation::ChangeWeight,
-            6 => Mutation::ChangeThreshold,
-            7 => Mutation::ChangeBias,
-            8 => Mutation::ChangeActivationFn,
+            6 => Mutation::ChangeBias,
+            7 => Mutation::ChangeActivationFn,
             _ => unreachable!(),
         }
     }
@@ -77,24 +75,14 @@ impl MutableNetwork for Network {
                     }
                 };
 
-                Node::create(
-                    self,
-                    layer,
-                    rng.gen_range(-1.0..1.0),
-                    rng.gen_range(-1.0..1.0),
-                )?;
+                Node::create(self, layer, rng.gen_range(-1.0..1.0))?;
             }
             Mutation::AddLayer => {
                 // create a layer and add a node to it
 
                 let layer = self.add_layer();
 
-                Node::create(
-                    self,
-                    layer,
-                    rng.gen_range(-1.0..1.0),
-                    rng.gen_range(-1.0..1.0),
-                )?;
+                Node::create(self, layer, rng.gen_range(-1.0..1.0))?;
             }
             Mutation::AddEdge => {
                 // pick two random nodes, the first from any layer and the second from a layer not equal to the first
@@ -184,20 +172,6 @@ impl MutableNetwork for Network {
                 };
 
                 edge.weight += rng.gen_range(-1.0..1.0);
-            }
-            Mutation::ChangeThreshold => {
-                // pick a random node
-                // if none exists, call this function again with AddNode mutation
-                // change the threshold of the node
-
-                let node = match self.nodes.choose_mut(&mut rng) {
-                    Some(x) => x,
-                    None => {
-                        return self.mutate(Mutation::AddNode);
-                    }
-                };
-
-                node.threshold += rng.gen_range(-1.0..1.0);
             }
             Mutation::ChangeBias => {
                 // pick a random node

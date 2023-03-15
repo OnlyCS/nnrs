@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Activation function for a neuron.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub enum ActivationFn {
     /// `|x| x.max(0.0)`
     ReLU,
@@ -17,6 +17,8 @@ pub enum ActivationFn {
 
     /// `|x| x.max(0.0) + 0.01 * x`
     LeakyReLU,
+    /// `|x, threshold| if x > threshold { 1.0 } else { 0.0 }`
+    Step(f64),
 }
 
 impl ActivationFn {
@@ -27,6 +29,13 @@ impl ActivationFn {
             ActivationFn::Tanh => x.tanh(),
             ActivationFn::Linear => x,
             ActivationFn::LeakyReLU => x.max(0.0) + 0.01 * x,
+            ActivationFn::Step(threshold) => {
+                if x > *threshold {
+                    1.0
+                } else {
+                    0.0
+                }
+            }
         }
     }
 }

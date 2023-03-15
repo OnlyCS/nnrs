@@ -20,7 +20,7 @@ impl Edge {
     /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
     /// # let layerid = network.add_layer();
     /// # let input_node_id = network.input_node_ids().pop().unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.2, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.0).unwrap();
     /// # let output_node_id = network.output_node_ids().pop().unwrap();
     /// Edge::create(&mut network, input_node_id, hidden_node_id, 1.3);
     /// Edge::create(&mut network, hidden_node_id, output_node_id, 1.5);

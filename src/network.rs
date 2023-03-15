@@ -67,7 +67,7 @@ impl Network {
     /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
     /// # let layerid = network.add_layer();
     /// # let input_node_id = network.input_node_ids().pop().unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.0, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.0).unwrap();
     /// # let output_node_id = network.output_node_ids().pop().unwrap();
     /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
     /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
@@ -141,18 +141,17 @@ impl Network {
             }
         }
 
-        for edge in edges {
-            let node_from = self.get_node(edge.0).context("Node from does not exist")?;
-
-            let (node_from_value, node_from_threshold) = (node_from.value, node_from.threshold);
+        for (node_from_id, node_to_id, edge_weight) in edges {
+            let node_from_value = self
+                .get_node(node_from_id)
+                .context("Node from does not exist")?
+                .value;
 
             let node_to = self
-                .get_node_mut(edge.1)
+                .get_node_mut(node_to_id)
                 .context("Node to does not exist")?;
 
-            if node_from_value > node_from_threshold {
-                node_to.add_value(node_from_value * edge.2);
-            }
+            node_to.add_value(node_from_value * edge_weight);
         }
 
         // get the next layer's id
@@ -221,7 +220,7 @@ impl Network {
     /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
     /// # let layerid = network.add_layer();
     /// # let input_node_id = network.input_node_ids().pop().unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.0, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.0).unwrap();
     /// # let output_node_id = network.output_node_ids().pop().unwrap();
     /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
     /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
@@ -239,7 +238,7 @@ impl Network {
     /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
     /// # let layer_id = network.add_layer();
     /// # let input_node_id = network.input_node_ids().pop().unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0).unwrap();
     /// # let output_node_id = network.output_node_ids().pop().unwrap();
     /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
     /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
@@ -266,7 +265,7 @@ impl Network {
     /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
     /// # let layerid = network.add_layer();
     /// # let input_node_id = network.input_node_ids().pop().unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, LayerID::HiddenLayer(0), 0.0, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.0).unwrap();
     /// # let output_node_id = network.output_node_ids().pop().unwrap();
     /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
     /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
@@ -287,7 +286,7 @@ impl Network {
     /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
     /// # let layerid = network.add_layer();
     /// # let input_node_id = network.input_node_ids().pop().unwrap();
-    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.0, 0.0).unwrap();
+    /// # let hidden_node_id = Node::create(&mut network, layerid, 0.0).unwrap();
     /// # let output_node_id = network.output_node_ids().pop().unwrap();
     /// # Edge::create(&mut network, input_node_id, hidden_node_id, 0.5).unwrap();
     /// # Edge::create(&mut network, hidden_node_id, output_node_id, 0.5).unwrap();
@@ -330,11 +329,11 @@ impl Network {
         let mut output_ids = Vec::new();
 
         for _ in 0..input_ct {
-            input_ids.push(Node::create(&mut network, LayerID::InputLayer, 0.0, 0.0)?);
+            input_ids.push(Node::create(&mut network, LayerID::InputLayer, 0.0)?);
         }
 
         for _ in 0..output_ct {
-            output_ids.push(Node::create(&mut network, LayerID::OutputLayer, 0.0, 0.0)?);
+            output_ids.push(Node::create(&mut network, LayerID::OutputLayer, 0.0)?);
         }
 
         Ok(network)

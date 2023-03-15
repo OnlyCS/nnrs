@@ -51,6 +51,7 @@ impl Node {
     /// # let mut network = Network::create(1, 1, ActivationFn::Sigmoid).unwrap();
     /// # let layerid = network.add_layer();
     /// let input_node_id = Node::create_with_custom_activation(&mut network, layerid, 0.0, ActivationFn::Sigmoid).unwrap();
+	/// ```
     pub fn create_with_custom_activation(
         network: &mut Network,
         layer_id: LayerID,

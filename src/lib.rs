@@ -95,54 +95,43 @@ fn test_serialization() -> anyhow::Result<()> {
     Ok(())
 }
 
-// #[test]
-// fn test_neat() -> anyhow::Result<()> {
-//     use crate::{
-//         activationfn::ActivationFn,
-//         neat::{
-//             environment::Environment,
-//             settings::{Settings, TrainingMode},
-//         },
-//         network::Network,
-//     };
+#[test]
+fn test_neat() -> anyhow::Result<()> {
+    use crate::{activationfn::ActivationFn, neat::environment::EnvironmentBuilder};
 
-//     let network = Network::create(2, 1, ActivationFn::Linear)?;
+    let mut environment = EnvironmentBuilder::init()
+        .input_size(2)
+        .output_size(1)
+        .mutation_rate(1)
+        .population(100)
+        .activation_fn(ActivationFn::Sigmoid)
+        .training_fn(|network| {
+            // basic xor
+            let mut outputs = vec![];
+            let mut distance = 0f64;
 
-//     let settings = Settings {
-//         population_size: 100,
-//         training_mode: TrainingMode::FitnessTarget(100f64),
-//         ..Settings::default()
-//     };
+            network.fire(vec![0f64, 0f64], &mut outputs).unwrap();
+            distance += (outputs[0] - 0f64).abs();
 
-//     let mut environment = Environment::new(settings, network, |network| {
-//         let mut distance = 0.0;
-//         let mut output = vec![];
+            outputs.clear();
+            network.fire(vec![0f64, 1f64], &mut outputs).unwrap();
+            distance += (outputs[0] - 1f64).abs();
 
-//         network.fire(vec![0.0, 0.0], &mut output).unwrap();
-//         distance += (0f64 - output[0]).abs();
-//         output.clear();
+            outputs.clear();
+            network.fire(vec![1f64, 0f64], &mut outputs).unwrap();
+            distance += (outputs[0] - 1f64).abs();
 
-//         network.fire(vec![0.0, 1.0], &mut output).unwrap();
-//         distance += (1f64 - output[0]).abs();
-//         output.clear();
+            outputs.clear();
+            network.fire(vec![1f64, 1f64], &mut outputs).unwrap();
+            distance += (outputs[0] - 0f64).abs();
 
-//         network.fire(vec![1.0, 0.0], &mut output).unwrap();
-//         distance += (1f64 - output[0]).abs();
-//         output.clear();
+            (4f64 - distance).powi(2)
+        })
+        .try_build()?;
 
-//         network.fire(vec![1.0, 1.0], &mut output).unwrap();
-//         distance += (0f64 - output[0]).abs();
-//         output.clear();
+    environment.run(9.0..16.0);
 
-//         (4f64 - distance).powi(2)
-//     });
+    println!("{:?}", environment.champion().unwrap());
 
-//     let mut champ = environment.run().unwrap();
-//     let mut output = vec![];
-
-//     champ.fire(vec![0.0, 0.0], &mut output).unwrap();
-
-//     println!("Campion says xor of 1 and 0 is: {:?}", output);
-
-//     Ok(())
-// }
+    Ok(())
+}

@@ -68,12 +68,17 @@ impl<F: Fn(&mut Network) -> f64> Environment<F> {
     where
         R: Into<AnyRange<f64>>,
     {
-        let range: AnyRange<f64> = fitness_range.into();
+        let range = fitness_range.into();
 
         while !range.contains(&self.best_fitness) {
             self.next_gen().unwrap();
             self.best_fitness = self.organisms[0].fitness.unwrap();
         }
+    }
+
+    /// Get the best organism.
+    pub fn champion(mut self) -> Option<Network> {
+        self.organisms.pop()
     }
 }
 

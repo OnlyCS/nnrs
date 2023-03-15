@@ -17,8 +17,9 @@ pub enum ActivationFn {
 
     /// `|x| x.max(0.0) + 0.01 * x`
     LeakyReLU,
+
     /// `|x, threshold| if x > threshold { 1.0 } else { 0.0 }`
-    Step(f64),
+    Binary(f64),
 }
 
 impl ActivationFn {
@@ -29,7 +30,7 @@ impl ActivationFn {
             ActivationFn::Tanh => x.tanh(),
             ActivationFn::Linear => x,
             ActivationFn::LeakyReLU => x.max(0.0) + 0.01 * x,
-            ActivationFn::Step(threshold) => {
+            ActivationFn::Binary(threshold) => {
                 if x > *threshold {
                     1.0
                 } else {

@@ -14,6 +14,7 @@ pub struct Environment<F: Fn(&mut Network) -> f64> {
     pub(crate) population: usize,
     pub(crate) rng: ThreadRng,
     pub(crate) mutation_rate: usize,
+    pub(crate) goal: f64,
 }
 
 impl<F: Fn(&mut Network) -> f64> Environment<F> {
@@ -33,9 +34,16 @@ impl<F: Fn(&mut Network) -> f64> Environment<F> {
             organism.fitness = Some(fitness);
         }
 
-        // sort by fitness g->l
-        self.organisms
-            .sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
+        // sort by fitness distance from goal closest to goal first
+        self.organisms.sort_by(|a, b| {
+            let a_fitness = a.fitness.unwrap();
+            let b_fitness = b.fitness.unwrap();
+
+            let a_distance = (a_fitness - self.goal).abs();
+            let b_distance = (b_fitness - self.goal).abs();
+
+            a_distance.partial_cmp(&b_distance).unwrap()
+        });
     }
 
     pub(crate) fn select_next_gen(&mut self) {
@@ -64,21 +72,25 @@ impl<F: Fn(&mut Network) -> f64> Environment<F> {
     }
 
     /// Run the environment until the fitness is within the given range.
-    pub fn run<R>(&mut self, fitness_range: R)
+    pub fn run<R>(&mut self, fitness_range: R, goal: f64)
     where
         R: Into<AnyRange<f64>>,
     {
         let range = fitness_range.into();
 
+        self.goal = goal;
+
         while !range.contains(&self.best_fitness) {
             self.next_gen().unwrap();
             self.best_fitness = self.organisms[0].fitness.unwrap();
+            print!("{} ", self.best_fitness);
         }
     }
 
     /// Get the best organism.
-    pub fn champion(mut self) -> Option<Network> {
-        self.organisms.pop()
+    pub fn champion(self) -> Network {
+        // get first organism
+        self.organisms[0].clone()
     }
 }
 
@@ -161,6 +173,7 @@ impl<F: Fn(&mut Network) -> f64> EnvironmentBuilder<F> {
             population: self.population.context("Population not set")?,
             rng: rand::thread_rng(),
             mutation_rate: self.mutation_rate.context("Mutation rate not set")?,
+            goal: 0.0,
         })
     }
 

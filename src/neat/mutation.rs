@@ -199,6 +199,10 @@ impl MutableNetwork for Network {
                     }
                 };
 
+                if node.layer_id == LayerID::OutputLayer {
+                    node.activation_fn = ActivationFn::Binary(rng.gen_range(0.0..1.0));
+                }
+
                 node.activation_fn = ActivationFn::select_random(&mut rng);
             }
         }

@@ -102,9 +102,9 @@ fn test_neat() -> anyhow::Result<()> {
     let mut environment = EnvironmentBuilder::init()
         .input_size(2)
         .output_size(1)
-        .mutation_rate(1)
+        .mutation_rate(5)
         .population(100)
-        .activation_fn(ActivationFn::Sigmoid)
+        .activation_fn(ActivationFn::ReLU)
         .training_fn(|network| {
             // basic xor
             let mut outputs = vec![];
@@ -125,13 +125,35 @@ fn test_neat() -> anyhow::Result<()> {
             network.fire(vec![1f64, 1f64], &mut outputs).unwrap();
             distance += (outputs[0] - 0f64).abs();
 
-            (4f64 - distance).powi(2)
+            if distance <= 1.0 {
+                println!("{} ", 4f64 - distance);
+            }
+
+            4f64 - distance
         })
         .try_build()?;
 
-    environment.run(9.0..16.0);
+    environment.run(3.01..4.0, 4.0);
 
-    println!("{:?}", environment.champion().unwrap());
+    let mut champ = environment.champion();
+
+    let mut outputs = vec![];
+
+    champ.fire(vec![1f64, 0f64], &mut outputs).unwrap();
+    println!("Champ says 1 xor 0 is {}", outputs[0]);
+    outputs.clear();
+
+    champ.fire(vec![0f64, 1f64], &mut outputs).unwrap();
+    println!("Champ says 0 xor 1 is {}", outputs[0]);
+    outputs.clear();
+
+    champ.fire(vec![1f64, 1f64], &mut outputs).unwrap();
+    println!("Champ says 1 xor 1 is {}", outputs[0]);
+    outputs.clear();
+
+    champ.fire(vec![0f64, 0f64], &mut outputs).unwrap();
+    println!("Champ says 0 xor 0 is {}", outputs[0]);
+    outputs.clear();
 
     Ok(())
 }
